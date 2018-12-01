@@ -130,20 +130,30 @@ char *Print (char *label, char *varName, Prt_TYPE fmt, ...)
    switch (fmt) {
       case Prt_D:
          lival = va_arg (ap, sInt4);
+#if SIZEOF_LONG_INT != 4
+         reallocSprintf (&buffer, "%s | %s | %d\n", label, varName, lival);
+#else
          reallocSprintf (&buffer, "%s | %s | %ld\n", label, varName, lival);
+#endif
          break;
       case Prt_DS:
          lival = va_arg (ap, sInt4);
          sval = va_arg (ap, char *);
-         reallocSprintf (&buffer, "%s | %s | %ld (%s)\n", label, varName,
-                         lival, sval);
+#if SIZEOF_LONG_INT != 4
+         reallocSprintf (&buffer, "%s | %s | %d (%s)\n", label, varName, lival, sval);
+#else
+         reallocSprintf (&buffer, "%s | %s | %ld (%s)\n", label, varName, lival, sval);
+#endif
          break;
       case Prt_DSS:
          lival = va_arg (ap, sInt4);
          sval = va_arg (ap, char *);
          unit = va_arg (ap, char *);
-         reallocSprintf (&buffer, "%s | %s | %ld (%s [%s])\n", label,
-                         varName, lival, sval, unit);
+#if SIZEOF_LONG_INT != 4
+         reallocSprintf (&buffer, "%s | %s | %d (%s [%s])\n", label, varName, lival, sval, unit);
+#else
+         reallocSprintf (&buffer, "%s | %s | %ld (%s [%s])\n", label, varName, lival, sval, unit);
+#endif
          break;
       case Prt_S:
          sval = va_arg (ap, char *);
@@ -774,14 +784,18 @@ static int PrintSect4 (grib_MetaData *meta, sChar f_unit)
                    Lookup (tbl411, sizeof (tbl411),
                            sect4->Interval[i].incrType));
             /* Following is so we get "# str" not "# (str)" */
-            sprintf (buffer, "%ld %s", sect4->Interval[i].lenTime,
-                     Lookup (tbl44, sizeof (tbl44),
-                             sect4->Interval[i].timeRangeUnit));
+#if SIZEOF_LONG_INT != 4
+            sprintf (buffer, "%d %s", sect4->Interval[i].lenTime, Lookup (tbl44, sizeof (tbl44), sect4->Interval[i].timeRangeUnit));
+#else
+            sprintf (buffer, "%ld %s", sect4->Interval[i].lenTime, Lookup (tbl44, sizeof (tbl44), sect4->Interval[i].timeRangeUnit));
+#endif
             Print ("PDS-S4", "Time range for processing", Prt_S, buffer);
             /* Following is so we get "# str" not "# (str)" */
-            sprintf (buffer, "%ld %s", sect4->Interval[i].timeIncr,
-                     Lookup (tbl44, sizeof (tbl44),
-                             sect4->Interval[i].incrUnit));
+#if SIZEOF_LONG_INT != 4
+            sprintf (buffer, "%d %s", sect4->Interval[i].timeIncr, Lookup (tbl44, sizeof (tbl44), sect4->Interval[i].incrUnit));
+#else
+            sprintf (buffer, "%ld %s", sect4->Interval[i].timeIncr, Lookup (tbl44, sizeof (tbl44), sect4->Interval[i].incrUnit));
+#endif
             Print ("PDS-S4", "Time increment", Prt_S, buffer);
          }
          break;
@@ -835,14 +849,24 @@ static int PrintSect4 (grib_MetaData *meta, sChar f_unit)
                 Lookup (tbl49, sizeof (tbl49), sect4->probType));
          sprintf (buffer, "%ld, %d", sect4->lowerLimit.value,
                   sect4->lowerLimit.factor);
+         sprintf (buffer, "%.0f, %d", (double) sect4->lowerLimit.value,
+                  sect4->lowerLimit.factor);
          Print ("PDS-S4", "Lower limit (scale value, scale factor)", Prt_GS,
+                sect4->lowerLimit.value *
+                pow (10, -1 * sect4->lowerLimit.factor), buffer);
+         sprintf (buffer, "%.0f, %d", (double) sect4->upperLimit.value,
+                  sect4->upperLimit.factor);
+         Print ("PDS-S4", "Upper limit (scale value, scale factor)", Prt_GS,
+                sect4->upperLimit.value *
+                pow (10, -1 * sect4->upperLimit.factor), buffer);
+/*         Print ("PDS-S4", "Lower limit (scale value, scale factor)", Prt_GS,
                 sect4->lowerLimit.value *
                 pow (10, -1 * sect4->lowerLimit.factor), buffer);
          sprintf (buffer, "%ld, %d", sect4->upperLimit.value,
                   sect4->upperLimit.factor);
          Print ("PDS-S4", "Upper limit (scale value, scale factor)", Prt_GS,
                 sect4->upperLimit.value *
-                pow (10, -1 * sect4->upperLimit.factor), buffer);
+                pow (10, -1 * sect4->upperLimit.factor), buffer); */
 /*         printf ("Hello world 1\n");*/
          break;
       case GS4_PERCENT_PNT:
@@ -889,12 +913,12 @@ static int PrintSect4 (grib_MetaData *meta, sChar f_unit)
                 sect4->numForeProbs);
          Print ("PDS-S4", "Probability type", Prt_DS, sect4->probType,
                 Lookup (tbl49, sizeof (tbl49), sect4->probType));
-         sprintf (buffer, "%ld, %d", sect4->lowerLimit.value,
+         sprintf (buffer, "%.0f, %d", (double) sect4->lowerLimit.value,
                   sect4->lowerLimit.factor);
          Print ("PDS-S4", "Lower limit (scale value, scale factor)", Prt_GS,
                 sect4->lowerLimit.value *
                 pow (10, -1 * sect4->lowerLimit.factor), buffer);
-         sprintf (buffer, "%ld, %d", sect4->upperLimit.value,
+         sprintf (buffer, "%.0f, %d", (double) sect4->upperLimit.value,
                   sect4->upperLimit.factor);
          Print ("PDS-S4", "Upper limit (scale value, scale factor)", Prt_GS,
                 sect4->upperLimit.value *
