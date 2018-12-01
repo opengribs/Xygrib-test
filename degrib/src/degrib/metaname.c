@@ -1771,7 +1771,7 @@ NDFD_AbrevOverideTable NDFD_Overide[] = {
    /*  7 */ {"WIND", "WindSpd"},
    /*  8 */ {"TCDC", "Sky"},
    /*  9 */ {"WVHGT", "WaveHeight"},
-   /* 10 */ {"ASNOW", "SnowAmt"},
+   /* 10 */ {"ASNOW", "SnowAmt"}, 
    /* 11 */ {"GUST", "WindGust"},
    /* 12 */ {"MAXRH", "MaxRH"},                /* MPA added 201202 */
    /* 13 */ {"HTSGW", "WaveHeight"},           /* MPA added 201709 */      
@@ -2928,7 +2928,8 @@ static void ElemNamePerc (uChar mstrVersion, uShort2 center, uShort2 subcenter, 
    } else {
       table = NULL;
    }
-   
+  
+ 
    if (table != NULL) {
       if (subcat < tableLen) {
          /* Check for NDFD over-rides. */
@@ -2936,6 +2937,24 @@ static void ElemNamePerc (uChar mstrVersion, uShort2 center, uShort2 subcenter, 
              IsData_MOS (center, subcenter)) {
             for (i = 0; i < (sizeof (NDFD_Overide) /
                              sizeof (NDFD_AbrevOverideTable)); i++) {
+               if (strcmp (table[subcat].name, "ASNOW") == 0) {
+                 if (timeRangeUnit == 3) {
+                    mallocSprintf (name, "%s%02dm%s%02dm", "Snow", lenTime, "e", percentile);
+                    mallocSprintf (comment, "%02d mon %s Percentile(%d)", lenTime,
+                                 table[subcat].comment, percentile);
+                 } else if (timeRangeUnit == 4) {
+                    mallocSprintf (name, "%s%02dy%s%02dy", "Snow", lenTime, "e", percentile);
+                    mallocSprintf (comment, "%02d yr %s Percentile(%d)", lenTime,
+                                   table[subcat].comment, percentile);
+                 } else {
+                    mallocSprintf (name, "%s%02d%s%02d", "Snow", lenTime, "e", percentile);
+                    mallocSprintf (comment, "%02d hr %s Percentile(%d)", lenTime,
+                                   table[subcat].comment, percentile);
+                 }
+                 mallocSprintf (unit, "[%s]", table[subcat].unit);
+                 *convert = table[subcat].convert;
+                 return;
+               }
                if (strcmp (NDFD_Overide[i].GRIB2name, table[subcat].name) ==
                    0) {
                   mallocSprintf (name, "%s%02d", NDFD_Overide[i].NDFDname,
@@ -3047,7 +3066,7 @@ static void ElemNameNorm (uChar mstrVersion, uShort2 center, uShort2 subcenter, 
                           double lowerProb, double upperProb, char **name,
                           char **comment, char **unit, int *convert,
                           sChar f_fstValue, double fstSurfValue,
-                          sChar f_sndValue, double sndSurfValue)
+                          sChar f_sndValue, double sndSurfValue, sChar percentile)
 {
    GRIB2ParmTable *table;
    GRIB2LocalTable *local;
@@ -3142,11 +3161,12 @@ static void ElemNameNorm (uChar mstrVersion, uShort2 center, uShort2 subcenter, 
    } else {
       table = NULL;
    }
-   
+  
    if (table != NULL) {
       if (subcat < tableLen) {
          /* Check for NDFD over-rides. */
          if (IsData_MOS (center, subcenter)) {
+
             if (strcmp (table[subcat].name, "APCP") == 0) {
                if (timeRangeUnit == 3) {
                   mallocSprintf (name, "%s%02dm", "QPF", lenTime);
@@ -3178,11 +3198,11 @@ static void ElemNameNorm (uChar mstrVersion, uShort2 center, uShort2 subcenter, 
                   mallocSprintf (name, "%s%02d", "SnowAmt", lenTime);
                   mallocSprintf (comment, "%02d hr %s", lenTime,
                                  table[subcat].comment);
-               }
+               } 
                mallocSprintf (unit, "[%s]", table[subcat].unit);
                *convert = table[subcat].convert;
                return;
-            }
+            } 
          }
          if (IsData_NDFD (center, subcenter) || IsData_MOS (center, subcenter)) {
             if (strcmp (table[subcat].name, "EVP") == 0) {
@@ -3313,7 +3333,7 @@ void ParseElemName (uChar mstrVersion, uShort2 center, uShort2 subcenter,
          ElemNameNorm (mstrVersion, center, subcenter, prodType, templat, cat, subcat,
                        lenTime, timeRangeUnit, statProcessID, timeIncrType, genID, probType, lowerProb,
                        upperProb, name, comment, unit, convert, f_fstValue, fstSurfValue,
-                       f_sndValue, sndSurfValue);       
+                       f_sndValue, sndSurfValue, percentile);       
 
       } else {
          ElemNameProb (mstrVersion, center, subcenter, prodType, templat, cat, subcat,
@@ -3327,7 +3347,7 @@ void ParseElemName (uChar mstrVersion, uShort2 center, uShort2 subcenter,
       ElemNameNorm (mstrVersion, center, subcenter, prodType, templat, cat, subcat,
                     lenTime, timeRangeUnit, statProcessID, timeIncrType, genID, probType, lowerProb,
                     upperProb, name, comment, unit, convert, f_fstValue, fstSurfValue,
-                       f_sndValue, sndSurfValue);
+                       f_sndValue, sndSurfValue, percentile);
    }
    if ((genProcess == 6) || (genProcess == 7)) {
       *convert = UC_NONE;
