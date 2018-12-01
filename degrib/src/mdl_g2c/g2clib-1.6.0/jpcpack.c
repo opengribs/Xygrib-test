@@ -168,12 +168,12 @@ void jpcpack(g2float *fld,g2int width,g2int height,g2int *idrstmpl,
 //
       mkieee(&rmin,idrstmpl+0,1);   // ensure reference value is IEEE format
       idrstmpl[3]=nbits;
-//
-//  The user may have intentionally set the field type to 1 (integer) since
-//  their data was integer before casting it to float to call these routines.
-//
+      //
+      //  The user may have intentionally set the field type to 1 (integer) since
+      //  their data was integer before casting it to float to call these routines.
+      //
       if (idrstmpl[4] != 1)
-         idrstmpl[4]=0;      // original data were reals
+         idrstmpl[4]=0;         // original data were reals
       if (idrstmpl[5] == 0) idrstmpl[6]=255;       // lossy not used
       if (ifld != 0) free(ifld);
 

@@ -14,6 +14,10 @@ g2int getgridindex(g2int number)
 ! PROGRAM HISTORY LOG:
 ! 2001-06-28  Gilbert
 ! 2007-08-16  Vuong     -  Added GDT 3.204  Curvilinear Orthogonal Grid
+! 2008-07-08  Vuong     -  Added GDT 3.32768 Rotate Lat/Lon E-grid (Arakawa)
+! 2009-01-14  Vuong     -  Changed structure name template to gtemplate
+! 2010-05-11  Vuong     -  Added GDT 3.32769 Rotate Lat/Lon Non-E Staggered grid (Arakawa)
+! 2013-08-06  Vuong     -  Added GDT 3.4,3.5,3.12,3.101,3.140
 !
 ! USAGE:    index=getgridindex(number)
 !   INPUT ARGUMENT LIST:
@@ -43,7 +47,7 @@ g2int getgridindex(g2int number)
            return(getgridindex);
 }
 
-template *getgridtemplate(g2int number)
+gtemplate *getgridtemplate(g2int number)
 /*!$$$  SUBPROGRAM DOCUMENTATION BLOCK
 !                .      .    .                                       .
 ! SUBPROGRAM:    getgridtemplate 
@@ -58,8 +62,11 @@ template *getgridtemplate(g2int number)
 ! PROGRAM HISTORY LOG:
 ! 2000-05-09  Gilbert
 ! 2007-08-16  Vuong     -  Added GDT 3.204  Curvilinear Orthogonal Grid
+! 2008-07-08  Vuong     -  Added GDT 3.32768 Rotate Lat/Lon E-grid (Arakawa)
+! 2010-05-11  Vuong     -  Added GDT 3.32769 Rotate Lat/Lon Non-E Staggered grid (Arakawa)
+! 2009-01-14  Vuong     -  Changed structure name template to gtemplate
 !
-! USAGE:    template *getgridtemplate(number)
+! USAGE:    gtemplate *getgridtemplate(number)
 !   INPUT ARGUMENT LIST:
 !     number   - NN, indicating the number of the Grid Definition 
 !                Template 3.NN that is being requested.
@@ -77,12 +84,12 @@ template *getgridtemplate(g2int number)
 !$$$*/
 {
            g2int index;
-           template *new;
+           gtemplate *new;
 
            index=getgridindex(number);
 
            if (index != -1) {
-              new=(template *)malloc(sizeof(template));
+              new=(gtemplate *)malloc(sizeof(gtemplate));
               new->type=3;
               new->num=templatesgrid[index].template_num;
               new->maplen=templatesgrid[index].mapgridlen;
@@ -101,7 +108,7 @@ template *getgridtemplate(g2int number)
 }
 
 
-template *extgridtemplate(g2int number,g2int *list)
+gtemplate *extgridtemplate(g2int number,g2int *list)
 /*!$$$  SUBPROGRAM DOCUMENTATION BLOCK
 !                .      .    .                                       .
 ! SUBPROGRAM:    extgridtemplate 
@@ -115,6 +122,10 @@ template *extgridtemplate(g2int number,g2int *list)
 !
 ! PROGRAM HISTORY LOG:
 ! 2000-05-09  Gilbert
+! 2008-07-08  Vuong     -  Added GDT 3.32768 Rotate Lat/Lon E-grid (Arakawa)
+! 2009-01-14  Vuong     -  Changed structure name template to gtemplate
+! 2010-05-11  Vuong     -  Added GDT 3.32769 Rotate Lat/Lon Non-E Staggered grid (Arakawa)
+! 2013-08-06  Vuong     -  Added GDT 3.4,3.5,3.12,3.101,3.140
 !
 ! USAGE:    CALL extgridtemplate(number,list)
 !   INPUT ARGUMENT LIST:
@@ -133,7 +144,7 @@ template *extgridtemplate(g2int number,g2int *list)
 !
 !$$$*/
 {
-           template *new;
+           gtemplate *new;
            g2int index,i;
 
            index=getgridindex(number);
@@ -153,6 +164,30 @@ template *extgridtemplate(g2int number,g2int *list)
                  else {
                     new->ext[i]=-2;
                  }
+              }
+           }
+           else if ( number == 4 ) {
+              new->extlen=list[7];
+              new->ext=(g2int *)malloc(sizeof(g2int)*new->extlen);
+              for (i=0;i<new->extlen;i++) {
+                 new->ext[i]=4;
+              }
+              new->extlen=list[8];
+              new->ext=(g2int *)malloc(sizeof(g2int)*new->extlen);
+              for (i=0;i<new->extlen;i++) {
+                 new->ext[i]=-4;
+              }
+           }
+           else if ( number == 5 ) {
+              new->extlen=list[7];
+              new->ext=(g2int *)malloc(sizeof(g2int)*new->extlen);
+              for (i=0;i<new->extlen;i++) {
+                 new->ext[i]=4;
+              }
+              new->extlen=list[8];
+              new->ext=(g2int *)malloc(sizeof(g2int)*new->extlen);
+              for (i=0;i<new->extlen;i++) {
+                 new->ext[i]=-4;
               }
            }
            else if ( number == 1000 ) {

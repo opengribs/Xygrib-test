@@ -72,7 +72,7 @@
 //       
     image=jpc_decode(jpcstream,opts);
     if ( image == 0 ) {
-       printf(" jpc_decode return = %d \n",ier);
+       printf(" jpc_decode return\n");
        return -3;
     }
     

@@ -11,19 +11,26 @@ SHELL=/bin/sh
 #  In addition, INC must include all directories where the above
 #  mentioned include files can be found.
 DEFS=-DUSE_JPEG2000 -DUSE_PNG
-INC=-I/usr/include
+
+#
+# Please make sure to include all idirectories where include files  
+#     can be found (jasper/*.h and png.h pngconf.h zconf.h zlib.h)
+#
+
+INC=-I/nwprod/lib/include/
 
 #
 #   This "C" source code contains many uses of the C++
 #   comment style "//".  Please make sure you include the
 #   appropriate compiler flag to allow the use of "//" comment indicators.
 #
-#CFLAGS=-q64 -O3 -qarch=auto -qcpluscmt $(INC) $(DEFS)
-CFLAGS= $(INC) $(DEFS)
 
-CC=cc
-LIB=libgrib2c.a
-ARFLAGS=-X64
+CFLAGS= -O3 -g -m64 $(INC) $(DEFS) -D__64BIT__
+
+CC=gcc
+
+LIB=libg2c_v1.6.0.a
+ARFLAGS=
 
 all: $(LIB)
 
@@ -77,19 +84,6 @@ $(LIB):	$(LIB)(gridtemplates.o) \
 	$(LIB)(g2_miss.o) \
 	$(LIB)(getpoly.o) \
 	$(LIB)(seekgb.o)
-#	$(LIB)(getfield.o) \
-#	$(LIB)(gettemplates.o) \
-#	$(LIB)(getlocal.o) \
-#	$(LIB)(gribinfo.o) \
-#	$(LIB)(ixgb2.o) \
-#	$(LIB)(getg2i.o) \
-#	$(LIB)(getg2ir.o) \
-#	$(LIB)(getgb2s.o) \
-#	$(LIB)(getgb2r.o) \
-#	$(LIB)(getgb2l.o) \
-#	$(LIB)(getgb2.o) \
-#	$(LIB)(putgb2.o) \
-#	$(LIB)(params.o)
 
 .c.a:
 	$(CC) -c $(CFLAGS) $<
