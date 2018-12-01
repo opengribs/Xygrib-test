@@ -3,8 +3,8 @@
 # DEGRIB configure.ac : version 20070705
 
 AC_PREREQ(2.59)
-AC_INIT([degrib],[2.15],[arthur.taylor@noaa.gov])
-AC_SUBST(PACKAGE_DATE,'20171211')
+AC_INIT([degrib],[2.16],[arthur.taylor@noaa.gov])
+AC_SUBST(PACKAGE_DATE,'20180508')
 AC_CONFIG_SRCDIR([Makefile.in])
 AC_CONFIG_HEADERS([gd/config.h:gd/scripts/config.hin])
 AC_CANONICAL_HOST()
@@ -167,12 +167,12 @@ AS_IF([test "x$with_extradebug" != xno],
 
 
 # Handle JPEG2000 Libtool fix
-JPEG2000_LIBTOOL_FIX=""
-case $host in
-  *-*-cygwin*|*-*-mingw*)
-    JPEG2000_LIBTOOL_FIX="cp ./jpeg2000/libtool.mingw ./jpeg2000/libtool";;
-  esac
-AC_SUBST([JPEG2000_LIBTOOL_FIX])
+#JPEG2000_LIBTOOL_FIX=""
+#case $host in
+#  *-*-cygwin*|*-*-mingw*)
+#    JPEG2000_LIBTOOL_FIX="cp ./jpeg2000/libtool.mingw ./jpeg2000/libtool";;
+#  esac
+#AC_SUBST([JPEG2000_LIBTOOL_FIX])
 
 # (For AIX only) Set the max dynamic memory data size to 0x50000000
 case $host in

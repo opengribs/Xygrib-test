@@ -952,9 +952,9 @@ static void PrintGDS (gdsType *gds)
    myAssert (gds != NULL);
 
    printf ("NumPts %ld, projType %d, sphere? %d, EarthMaj %f, EarthMin %f\n",
-           gds->numPts, gds->projType, gds->f_sphere, gds->majEarth,
+           (long int) gds->numPts, gds->projType, gds->f_sphere, gds->majEarth,
            gds->minEarth);
-   printf ("Nx %ld, Ny %ld, lat1 %f, lon1 %f\n", gds->Nx, gds->Ny, gds->lat1,
+   printf ("Nx %ld, Ny %ld, lat1 %f, lon1 %f\n", (long int) gds->Nx, (long int) gds->Ny, gds->lat1,
            gds->lon1);
    printf ("ResFlag %d, OrientLon %f, Dx %f, Dy %f, meshLat %f\n",
            gds->resFlag, gds->orientLon, gds->Dx, gds->Dy, gds->meshLat);
@@ -1010,7 +1010,7 @@ static void PrintSupPDS (char *buffer, sInt4 buffLen)
    ptr = buffer;
    MEMCPY_LIT (&li_temp, ptr, sizeof (sInt4));
    ptr += 4;
-   printf ("Total size of SuperHead + PDS Array: %ld\n", li_temp);
+   printf ("Total size of SuperHead + PDS Array: %ld\n", (long int) li_temp);
    MEMCPY_LIT (&si_temp, ptr, sizeof (uShort2));
    ptr += 2;
    printf ("Size of SuperHead: %d\n", si_temp);
@@ -1063,7 +1063,7 @@ static void PrintSupPDS (char *buffer, sInt4 buffLen)
       printf ("filename: %s\n", elem);
       MEMCPY_LIT (&li_temp, ptr, sizeof (sInt4));
       ptr += 4;
-      printf ("File Offset: %ld\n", li_temp);
+      printf ("File Offset: %ld\n", (long int) li_temp);
       uc_temp = *ptr;
       ptr++;
       printf ("endian: %d\n", uc_temp);
@@ -1359,7 +1359,7 @@ int PrintFLXBuffer (char *flxArray, int flxArrayLen)
    }
    ptr += 3;
    MEMCPY_LIT (&fileLen, ptr, sizeof (sInt4));
-   printf ("FileLen = %ld\n", fileLen);
+   printf ("FileLen = %ld\n", (long int) fileLen);
    ptr = flxArray + HEADLEN;
    MEMCPY_LIT (&numGDS, ptr, sizeof (uShort2));
    ptr += 2;
@@ -1497,7 +1497,10 @@ int Asc2Flx (char *inFile, char *outFile)
                   case GDS:
                      if (GetIndexFromStr (first, Gds_Elem, &index) < 0) {
                         printf ("Invalid section '%s'\n", first + 1);
-                        goto error;
+                        free (flxArray);
+                        fclose (fp);
+                        free (buffer);
+                        return -1;
                      }
                      switch (index) {
                         case GDS_numPts:
@@ -1568,7 +1571,10 @@ int Asc2Flx (char *inFile, char *outFile)
                   case SUPER_PDS:
                      if (GetIndexFromStr (first, Sup_Pds_Elem, &index) < 0) {
                         printf ("Invalid section '%s'\n", first + 1);
-                        goto error;
+                        free (flxArray);
+                        fclose (fp);
+                        free (buffer);
+                        return -1;
                      }
                      switch (index) {
                         case SUP_PDS_element:
@@ -1595,7 +1601,10 @@ int Asc2Flx (char *inFile, char *outFile)
                   case PDS:
                      if (GetIndexFromStr (first, Pds_Elem, &index) < 0) {
                         printf ("Invalid section '%s'\n", first + 1);
-                        goto error;
+                        free (flxArray);
+                        fclose (fp);
+                        free (buffer);
+                        return -1;
                      }
                      switch (index) {
                         case PDS_validTime:
@@ -1629,9 +1638,12 @@ int Asc2Flx (char *inFile, char *outFile)
       gds.f_sphere = 1;
    }
    if (gds.Nx * gds.Ny != gds.numPts) {
-      printf ("Wrong number of points %ld * %ld != %ld\n", gds.Nx, gds.Ny,
-              gds.numPts);
-      goto error;
+      printf ("Wrong number of points %ld * %ld != %ld\n", (long int) gds.Nx, (long int) gds.Ny,
+              (long int) gds.numPts);
+      free (flxArray);
+      fclose (fp);
+      free (buffer);
+      return -1;
    }
 
    CreateFLX (&flxArray, &flxArrayLen);
@@ -1640,7 +1652,10 @@ int Asc2Flx (char *inFile, char *outFile)
                   comment, gdsNum, center, subCenter, (time_t) validTime,
                   fltName, fltOffset, endian, scan, NULL, 0) != 0) {
       printf ("Problems updating the PDS part.\n");
-      goto error;
+      free (flxArray);
+      fclose (fp);
+      free (buffer);
+      return -1;
    }
    /* Update fileLen and write the index file out. */
    flxLen = flxArrayLen;
@@ -1651,11 +1666,6 @@ int Asc2Flx (char *inFile, char *outFile)
    fclose (fp);
    free (buffer);
    return 0;
- error:
-   free (flxArray);
-   fclose (fp);
-   free (buffer);
-   return -1;
 }
 
 #ifdef DATA_DEBUG

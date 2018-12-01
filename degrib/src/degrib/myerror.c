@@ -125,7 +125,10 @@ static void AllocSprintf (char **Ptr, size_t *LenBuff, const char *fmt,
          lenBuff += strlen (p1);
          buffer = (char *) realloc ((void *) buffer, lenBuff);
          strcpy (buffer + ipos, p1);
-         goto done;
+         buffer[lenBuff - 1] = '\0';
+         *Ptr = buffer;
+         *LenBuff = lenBuff;
+         return;
       }
       /* Handle data up to the current % in format string. */
       lenBuff += p - p1;
@@ -148,7 +151,10 @@ static void AllocSprintf (char **Ptr, size_t *LenBuff, const char *fmt,
             lenBuff += p1 - p - 1;
             buffer = (char *) realloc ((void *) buffer, lenBuff);
             strncpy (buffer + ipos, p + 1, p1 - p - 1);
-            goto done;
+            buffer[lenBuff - 1] = '\0';
+            *Ptr = buffer;
+            *LenBuff = lenBuff;
+            return;
          default:
             flag = ' ';
       }
@@ -227,7 +233,8 @@ static void AllocSprintf (char **Ptr, size_t *LenBuff, const char *fmt,
                   slen = strlen (sval);
                   lenBuff += slen;
                   buffer = (char *) realloc ((void *) buffer, lenBuff);
-                  strncpy (buffer + ipos, sval, slen);
+                  strncpy (buffer + ipos, sval, slen + 1); /*  +1 to make room for a fucking NULL.
+		                                            *  This problem is probably everywhere */
                   ipos = lenBuff - 1;
                   break;
                }
@@ -261,8 +268,6 @@ static void AllocSprintf (char **Ptr, size_t *LenBuff, const char *fmt,
       }
       p = p1 + 1;
    }
- done:
-   buffer[lenBuff - 1] = '\0';
    *Ptr = buffer;
    *LenBuff = lenBuff;
 }

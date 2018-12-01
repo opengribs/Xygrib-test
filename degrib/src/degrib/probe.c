@@ -124,7 +124,7 @@ static void PrintProbeWx (FILE *out_fp, double ans, sect2_WxType *wx,
             break;
       }
    } else {
-      fprintf (out_fp, "%ld", wxIndex);
+      fprintf (out_fp, "%ld", (long int) wxIndex);
    }
 }
 
@@ -169,7 +169,7 @@ static void PrintProbeHazard (FILE *out_fp, double ans, sect2_HazardType *hazard
             break;
       }
    } else {
-      fprintf (out_fp, "%ld", hazIndex);
+      fprintf (out_fp, "%ld", (long int) hazIndex);
    }
 }
 
@@ -433,7 +433,7 @@ static void GRIB2ProbeStyle1 (FILE **pnt_fps,
                               sInt4 grib_DataLen, userType *usr,
                               uInt4 numPnts, Point * pnts, char **labels,
                               grib_MetaData *meta, myMaparam *map,
-                              double missing, sChar f_surface, sChar f_cells)
+                              double missing, sChar f_surface, sChar f_comment, sChar f_cells)
 {
    size_t i;            /* Counter for the points. */
    char format[20];     /* Format to print the data with. */
@@ -445,6 +445,9 @@ static void GRIB2ProbeStyle1 (FILE **pnt_fps,
    double lat, lon;     /* The lat/lon at the grid cell. */
    sChar f_continue;    /* Flag to continue looping over the points or grid */
    sChar f_missing;     /* flag whether the cell fell off the grid. */
+   char *ptr;           /* copy of f_comment. f_comment is long name of element */
+                        /* to be used in "-pointStyle 3" */
+   int j;               /* counter used to replace spaces with an "_" in copy of f_comment, ptr */
 
    /* Print labels */
    sprintf (format, "%%.%df", usr->decimal);
@@ -553,12 +556,25 @@ static void GRIB2ProbeStyle1 (FILE **pnt_fps,
                   myRound (newX, usr->LatLon_Decimal),
                   myRound (newY, usr->LatLon_Decimal), lat, lon,
                   usr->separator);
-         if (meta->unitName != NULL) {
-            fprintf (pnt_fps[0], "%s%s%s", meta->element, meta->unitName,
-                     usr->separator);
+         if (f_comment) {
+            ptr = (char *) malloc (strlen (meta->comment) + 1);
+            for (j = 0; j < strlen (meta->comment); j++) {
+               if (meta->comment[j] != ' ') {
+                  ptr[j] = meta->comment[j];
+               } else {
+                  ptr[j] = '_';
+               }
+            }
+            ptr[j] = '\0';
+            fprintf (pnt_fps[i], "%s%s", ptr, usr->separator);
+            free (ptr);
          } else {
-            fprintf (pnt_fps[0], "%s%s%s", meta->element, meta->comment,
-                     usr->separator);
+            fprintf (pnt_fps[0], "%s", meta->element);
+            if (meta->unitName != NULL) {
+               fprintf (pnt_fps[0], "%s%s", meta->unitName, usr->separator);
+            } else {
+               fprintf (pnt_fps[0], "%s%s", meta->comment, usr->separator);
+            }
          }
          if (f_surface == 1) {
             fprintf (pnt_fps[0], "%s%s", meta->shortFstLevel,
@@ -594,12 +610,25 @@ static void GRIB2ProbeStyle1 (FILE **pnt_fps,
          } else {
             fprintf (pnt_fps[i], "%s%s", labels[i], usr->separator);
          }
-         if (meta->unitName != NULL) {
-            fprintf (pnt_fps[i], "%s%s%s", meta->element, meta->unitName,
-                     usr->separator);
+         if (f_comment) {
+            ptr = (char *) malloc (strlen (meta->comment) + 1);
+            for (j = 0; j < strlen (meta->comment); j++) {
+               if (meta->comment[j] != ' ') {
+                  ptr[j] = meta->comment[j];
+               } else {
+                  ptr[j] = '_';
+               }
+            }
+            ptr[j] = '\0';
+            fprintf (pnt_fps[i], "%s%s", ptr, usr->separator);
+            free (ptr);
          } else {
-            fprintf (pnt_fps[i], "%s%s%s", meta->element, meta->comment,
-                     usr->separator);
+            fprintf (pnt_fps[i], "%s", meta->element);
+            if (meta->unitName != NULL) {
+               fprintf (pnt_fps[i], "%s%s", meta->unitName, usr->separator);
+            } else {
+               fprintf (pnt_fps[i], "%s%s", meta->comment, usr->separator);
+            }
          }
          if (f_surface == 1) {
             fprintf (pnt_fps[i], "%s%s", meta->shortFstLevel,
@@ -791,6 +820,7 @@ int GRIB2Probe (userType *usr, int numPnts, Point * pnts, char **labels,
    FILE *grib_fp;       /* The opened grib2 file for input. */
    int i;               /* Loop counters. */
    sChar f_style;       /* 0 use Style0(), 1 use Style1() */
+   sChar f_comment = 0; /* 0 use element, 1 use comment (replacing ' ' with '_') */
    sChar f_surface;     /* 0 no surface info, 1 short form of surface name */
    myMaparam map;       /* Used to compute the grid lat/lon points. */
    double missing = 0;  /* Missing value to use. */
@@ -824,7 +854,13 @@ int GRIB2Probe (userType *usr, int numPnts, Point * pnts, char **labels,
 
    f_surface = usr->f_surface;
    f_style = usr->f_pntStyle;
-   if (f_style == 2) {
+   if (f_style == 3) {
+      f_style = 1;
+      if (f_surface == 0) {
+         f_surface = 1;
+      }
+      f_comment = 1;
+   } else if (f_style == 2) {
       f_style = 1;
       if (f_surface == 0) {
          f_surface = 1;
@@ -967,7 +1003,7 @@ int GRIB2Probe (userType *usr, int numPnts, Point * pnts, char **labels,
       } else {
          GRIB2ProbeStyle1 (pnt_fps, f_firstFps, grib_Data, grib_DataLen,
                            usr, numPnts, pnts, labels, &meta, &map, missing,
-                           f_surface, usr->f_pntType);
+                           f_surface, f_comment, usr->f_pntType);
       }
       MetaFree (&meta);
    }
@@ -1109,33 +1145,14 @@ int GenericProbe (char *filename, int numPnts, double *lat, double *lon,
          msg = errSprintf (NULL);
          fprintf (stderr, "ERROR: In call to GenericProbe().\n%s", msg);
          free (msg);
-         retVal = -3;
-         goto error;
+         free (grib_Data);
+         fclose (grib_fp);
+         MetaFree (&meta);
+         IS_Free (&is);
+         return -3;
       }
       /* Up to caller to validate the range of the data.  Could do it here if 
        * the caller provided f_validRand and validMax, validMin. */
-/*
-      if (f_validRange > 0) {
-         * valid max. *
-         if (f_validRange > 1) {
-            if (meta->gridAttrib.max > validMax) {
-               fprintf (stderr, "ERROR: %f > valid Max of %f\n",
-                        meta->gridAttrib.max, validMax);
-               retVal = -3;
-               goto error;
-            }
-         }
-         * valid min. *
-         if (f_validRange % 2) {
-            if (meta->gridAttrib.min < validMin) {
-               fprintf (stderr, "ERROR: %f < valid Min of %f\n",
-                        meta->gridAttrib.min, validMin);
-               retVal = -3;
-               goto error;
-            }
-         }
-      }
-*/
       if (f_endMsg != 1) {
          subgNum++;
       } else {
@@ -1145,8 +1162,11 @@ int GenericProbe (char *filename, int numPnts, double *lat, double *lon,
       /* Check that gds is valid before setting up map projection. */
       if (GDSValid (&(meta.gds)) != 0) {
          fprintf (stderr, "ERROR: Sect3 was not Valid.\n");
-         retVal = -4;
-         goto error;
+         free (grib_Data);
+         fclose (grib_fp);
+         MetaFree (&meta);
+         IS_Free (&is);
+         return -4;
       }
       /* Set up the map projection. */
       SetMapParamGDS (&map, &(meta.gds));
@@ -1222,8 +1242,11 @@ int GenericProbe (char *filename, int numPnts, double *lat, double *lon,
             /* Handle the weather case. */
             fprintf (stderr, "ERROR: Currently doesn't handle weather "
                      "strings.\n");
-            retVal = -1;
-            goto error;
+            free (grib_Data);
+            fclose (grib_fp);
+            MetaFree (&meta);
+            IS_Free (&is);
+            return -1;
          }
       }
 /*
@@ -1238,12 +1261,6 @@ int GenericProbe (char *filename, int numPnts, double *lat, double *lon,
    MetaFree (&meta);
    IS_Free (&is);
    return 0;
- error:
-   free (grib_Data);
-   fclose (grib_fp);
-   MetaFree (&meta);
-   IS_Free (&is);
-   return retVal;
 }
 
 #ifdef PROBE_DEBUG
