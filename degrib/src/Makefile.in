@@ -21,8 +21,7 @@ LIB_DEPENDS = $(LIB_DEP1) \
               ./mdl_g2c/libmdl_g2c.a \
               ./gd/libgd.a \
               ./emapf-c/libemapf.a \
-              ./netcdf/libsrc/libnetcdf.a \
-              ./libxml/.libs/libxml2.a
+              ./netcdf/libsrc/libnetcdf.a
 
 PRJ_NAME = @PACKAGE_NAME@
 
@@ -39,7 +38,7 @@ xyz2shp/xyz2shp: $(LIB_DEP1)
 $(PRJ_NAME)/$(PRJ_NAME): $(LIB_DEPENDS)
 	@echo "-----------------------------"
 	@echo "Attempting to compile $(PRJ_NAME)..."
-	(cd $(PRJ_NAME) && make)
+	(cd $(PRJ_NAME) && make $(PRJ_NAME) )
 	@echo "Finished with $(PRJ_NAME)"
 	@echo "-----------------------------"
 	@echo ""
@@ -155,14 +154,6 @@ $(PRJ_NAME)/$(PRJ_NAME): $(LIB_DEPENDS)
 	@echo "-----------------------------"
 	@echo ""
 
-./libxml/.libs/libxml2.a: ./libxml/Makefile
-	@echo "-----------------------------"
-	@echo "Attempting to compile libxml..."
-	(cd ./libxml @OBJECT_MODE@ && make libxml2.la)
-	@echo "Finished with libxml..."
-	@echo "-----------------------------"
-	@echo ""
-
 #####
 # Configurables
 #####
@@ -214,16 +205,6 @@ ${top_srcdir}/@MEM_NAME@/Makefile: ${top_srcdir}/@MEM_NAME@/configure
 	@echo "-----------------------------"
 	@echo ""
 
-./libxml/Makefile: ./libxml/configure
-	@echo "-----------------------------"
-	@echo "Attempting to configure libxml..."
-	(cd ./libxml && export CC="$(CC)" && export CFLAGS="$(CFLAGS)" && \
-                 ./configure --with-minimum --with-tree --with-output --enable-shared=no \
-                 --with-zlib=$(abs_top_builddir)/zlib)
-	@echo "Finished with libxml..."
-	@echo "-----------------------------"
-	@echo ""
-
 #####
 # Regular targets
 #####
@@ -237,7 +218,7 @@ install:
 	@echo "Finished with install of $(PRJ_NAME)"
 	@echo "-----------------------------"
 
-# clean: ./emapf-c/Makefile ./netcdf/Makefile ./jpeg2000/Makefile ./libxml/Makefile
+# clean: ./emapf-c/Makefile ./netcdf/Makefile ./jpeg2000/Makefile 
 clean: ./emapf-c/Makefile ./netcdf/Makefile
 	- (cd ./zlib && make clean && rm -f example$(EXEEXT) minigzip$(EXEEXT))
 	- (cd ./zlib/contrib/minizip && make clean)
@@ -283,16 +264,6 @@ distclean: ./emapf-c/Makefile ./netcdf/Makefile
 	(cd ./jpeg2000/src/libjasper/include/jasper && rm -f Makefile stamp-h1 jas_config.h jas_config.h.in~)
 # Following gave problems in cygwin/mingw environment
 #	(cd ./libxml && make distclean)
-	(cd ./libxml && rm -rf *.o *.lo *.pc config.status xml2-config .deps Makefile libtool config.h COPYING COPYING.lnk config.log *.la .libs stamp-h1 libxml2.spec)
-	(cd ./libxml/xstc && rm -f Makefile)
-	(cd ./libxml/python && rm -rf setup.py Makefile .deps)
-	(cd ./libxml/python/tests && rm -f Makefile)
-	(cd ./libxml/example && rm -rf .deps Makefile)
-	(cd ./libxml/doc && rm -f Makefile)
-	(cd ./libxml/doc/devhelp && rm -f Makefile)
-	(cd ./libxml/doc/examples && rm -rf .deps Makefile)
-	(cd ./libxml/include && rm -f Makefile)
-	(cd ./libxml/include/libxml && rm -f Makefile)
 	rm -f netcdf/ncdump/ncdump$(EXEEXT)
 	rm -f netcdf/ncgen/ncgen$(EXEEXT)
 	rm -r -f *.bak config.status config.log Makefile autom4te.cache

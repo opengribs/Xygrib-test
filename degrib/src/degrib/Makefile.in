@@ -18,9 +18,9 @@ TK_LDFLAGS = ${LD_FLAGS} @TK_LDFLAGS@
 ############################
 # XML Dependence
 XML_DEF = -D_DWML_
-XML_INC = -I../degrib -I../libxml/include -I../dwmllib
-XML_LIB = -L../dwmllib -ldwml -L../libxml/.libs/ -lxml2
-XML_LIBDEP = ../dwmllib/libdwml.a ../libxml/.libs/libxml2.a
+XML_INC = -I../degrib  -I../dwmllib -I /usr/include/libxml2
+XML_LIB = -L../dwmllib -ldwml  -lxml2
+XML_LIBDEP = ../dwmllib/libdwml.a 
 XML_CLEAN = (cd ../dwmllib && make -f makefile clean)
 ############################
 
