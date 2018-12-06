@@ -43,6 +43,11 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap indilib/indi; brew install git cmake libnova openjpeg libpng qt5; export PATH="/usr/local/opt/qt5/bin:$PATH";  echo 'export PATH="/usr/local/opt/qt5/bin:$PATH"' >> ~/.bash_profile; fi
 
 script:
+    - if [[ "${COVERITY_SCAN_BRANCH}" == 1 ]];
+      then
+          echo "Don't build on coverty_scan branch.";
+          exit 0;
+      fi
     - mkdir build && cd build
     - cmake ..
     - make -s
@@ -52,3 +57,22 @@ notifications:
     
 git:
     depth: 10
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "GgrtWt/clDdtwXqskht7xL3alVRPm/+VriSwtr0KGkMTeDpXvUbRx+rzyaUJS+HBr2aikOWqp8laSNRy5HRNlJg5ns6MBDj+0zDm964IfhFWmYzbWcjoa8H1elQVUlAtaghdUJIrgV8yqhQL0KkE3MBTWyIfL3kcPaHinW4eI6UeeNge0+0Gk98Xl7BfEfSuzywmjzxp2VYU7C1BUCncFx5+PRTfdy1Ozq97BU/kDQGejXGVR4NAP4ER65w3HMd7NjRKalTZZALTcJp7F1cPOk1jC6UGYoCDD7FVTN8ukm7MCvHWAHP/FfFq9DtWwhppIWnKnYtbPyOyKd2NlY9YgllpKKWlnbO+SUy+7jmoThsQeSiFOTEwx3zP7fKv/QDSqj+vm1miLBRcoE9PfS719h514eQLvK2PUcblkjJSznt6IJyDUJ6TtXv/L5Bep9VKUCV/B6jvKdDh/tsVB5m9qHG7Bz9thk4OnlGJ56TbEh4OdZFVSR1INDgpIlC/ZeoQhU61MEjFqeuvZ42MJxPwURHz40aMfmcGwO3VPdVzVkxxidaH4nIGf2qPjh1aLDrpn7biesGlnZBHOInppMuZYGd/cHDiPHLh3YgmA3uJtTZ11KjCMucemwQ/zviMk++MTBqL+d8vRcS4sXbc0mNziFfNROWhMsYXWF3IFKQVeLE="
+
+before_install:
+      - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca- ;fi
+
+addons:
+  coverity_scan:
+    project:
+      name: "did-g/XyGrib"
+      description: "Build submitted via Travis CI"
+    notification_email: didier@users.sourceforge.net
+    build_command_prepend: "mkdir build_s && cd build_s && cmake -DCMAKE_BUILD_TYPE=Debug ../"
+    build_command:   "make -s"
+    branch_pattern: dev

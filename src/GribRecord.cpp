@@ -395,24 +395,9 @@ fprintf(stderr,"hasBMS=%d isScanIpositive=%d isScanJpositive=%d isAdjacentI=%d\n
 }
 
 //-------------------------------------------------------------------------------
-// Constructor
-//-------------------------------------------------------------------------------
-GribRecord::GribRecord ()
-{
-	ok = false;
-    data = nullptr;
-    BMSbits = nullptr;
-    boolBMStab = nullptr;
-	periodP1 = 0;
-	periodP2 = 0;
-	waveData = false;
-	verticalOrientationIsAmbiguous = false;
-}
-
-//-------------------------------------------------------------------------------
 // Lecture depuis un fichier
 //-------------------------------------------------------------------------------
-GribRecord::GribRecord (ZUFILE* file, int id_) : GribRecord()
+GribRecord::GribRecord (ZUFILE* file, int id_)
 {
     id = id_;
     seekStart = zu_tell(file);
@@ -474,7 +459,7 @@ GribRecord::GribRecord (ZUFILE* file, int id_) : GribRecord()
 // Constructeur de recopie
 //-------------------------------------------------------------------------------
 GribRecord::GribRecord (const GribRecord &rec)
-{
+ : RegularGridRecord(rec) {
     *this = rec;
 	setDuplicated (true);
     // recopie les champs de bits
@@ -859,6 +844,8 @@ bool GribRecord::readGribSection2_GDS(ZUFILE* file) {
 		Di = (xmax-xmin) / (Ni-1);
 		Dj = (ymax-ymin) / (Nj-1);
 	}
+    grid = std::make_shared<PlateCarree>(Ni, Nj, xmin, ymin, Di, Dj);
+
 // printf ("Ni=%d Nj=%d\n", Ni, Nj);
 //print ("readGribSection2_GDS");	
 

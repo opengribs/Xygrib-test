@@ -1,9 +1,13 @@
 clone_folder: c:\project\xygrib
 shallow_clone: true
 
-#branches:
-#  only:
-#    - master
+branches:
+  only:
+    - master
+    - prelease
+    - ci/appveyor
+    - appveyor
+    - dev
 
 image:
 - Visual Studio 2015
@@ -46,10 +50,11 @@ before_build:
   # - dir C:\MinGW\bin
   - mkdir thirdparty
   - cd thirdparty
-  # - ps: Start-FileDownload http://195.154.231.142/IFREMER/thirdpartylib.zip
   - ps: Start-FileDownload https://github.com/opengribs/Xygrib-lib/releases/download/1.0/thirdpartylib.zip
   - mkdir c:\opt
   - cmd: 7z x -y thirdpartylib.zip -oc:\opt
+  # XXX remove bogus libproj.dll.a
+  - del c:\opt\lib\libproj.dll.a
   - cd ..
   - set EXTERNLIBS="\opt"
   - dir %EXTERNLIBS%

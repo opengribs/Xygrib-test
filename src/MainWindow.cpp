@@ -389,7 +389,8 @@ mb->acMap_SelectMETARs->setVisible (false);	// TODO
     connect(mb->acOptions_DateChooser, SIGNAL(triggered(bool)),
             this,  SLOT(slotShowDateChooser(bool)));
     //-------------------------------------------------------
-    connect(mb->acOptions_Units, SIGNAL(triggered()), dialogUnits, SLOT(exec()));
+    connect(mb->acOptions_Units, &QAction::triggered,
+                dialogUnits, &DialogUnits::exec);
     connect(mb->acOptions_Fonts, SIGNAL(triggered()), dialogFonts, SLOT(exec()));
     connect(dialogUnits, SIGNAL(accepted()), terre, SLOT(slotMustRedraw()));
     connect(dialogUnits, SIGNAL(accepted()), colorScaleWidget, SLOT(update()));
@@ -2070,7 +2071,7 @@ void MainWindow::setMenubarAltitudeData (DataCode dtc)
 	std::set<Altitude> setalt = reader->getAllAltitudes (dtc.dataType);
 	
 	for (auto alt : setalt) {
-			checkAltitude (LV_GND_SURF,0, mb->acAlt_GND, alt, dtc);
+        checkAltitude (LV_GND_SURF,0, mb->acAlt_GND, alt, dtc);
 		checkAltitude (LV_ABOV_GND,1, mb->acAlt_GND_1m, alt, dtc);
 		checkAltitude (LV_ABOV_GND,2, mb->acAlt_GND_2m, alt, dtc);
 		checkAltitude (LV_ABOV_GND,3, mb->acAlt_GND_3m, alt, dtc);

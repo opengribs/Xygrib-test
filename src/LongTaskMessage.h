@@ -1,6 +1,7 @@
 /**********************************************************************
 XyGrib: meteorological GRIB file viewer
-Copyright (C) 2008-2012 - Jacques Zaninetti - http://www.zygrib.org
+
+Copyright (C) 2018 - opengrib - http://www.xygrib.org
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,31 +15,40 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 ***********************************************************************/
 
-/*************************************
-Dessin des données GRIB (avec QT)
-*************************************/
+#ifndef LONGTASKMESSAGE_H
+#define LONGTASKMESSAGE_H
 
-#ifndef GRIB2PLOT_H
-#define GRIB2PLOT_H
+#include <QObject>
 
-#include "GribPlot.h"
-#include "Grib2Reader.h"
- 
-//===============================================================
-class Grib2Plot : public GribPlot
+//-----------------------------------------
+class LongTaskMessage :public QObject
 {
-    public:
-        Grib2Plot ();
-        Grib2Plot (const Grib2Plot &) = delete;
-        Grib2Plot& operator=( const Grib2Plot& ) = delete; // non copyable
+Q_OBJECT
+public:
 
-        virtual ~Grib2Plot ();
-        
-		virtual void  loadFile (const QString &fileName,
-						LongTaskProgress *taskProgress=NULL, int nbrecs=0);
+    enum LongTaskMessageType
+	{
+		LTASK_OPEN_FILE,
+		LTASK_ANALYSE_DATA,
+		LTASK_PREPARE_MAPS,
+		LTASK_UNCOMPRESS_FILE
+	};
 
+    LongTaskMessage() = default;
+    ~LongTaskMessage() = default;
+
+    bool continueDownload{true};
+
+public slots:
+    void cancel();
+
+signals:
+    void newMessage(LongTaskMessage::LongTaskMessageType type);
+    // gauge 1 -- 100 %
+    void valueChanged(int newValue);
 };
 
 #endif
