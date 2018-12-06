@@ -1,4 +1,5 @@
-cmake_minimum_required (VERSION 3.1.0)
+#cmake_minimum_required (VERSION 3.1.0)
+cmake_minimum_required (VERSION 2.8)
 project (XyGrib)
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 2)
@@ -22,7 +23,23 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #set(CMAKE_AUTOUIC ON)
 #set(CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/src/GUI")
 
-set(CMAKE_CXX_STANDARD 11)
+if (CMAKE_VERSION VERSION_LESS "3.1")
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+  CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+  if(COMPILER_SUPPORTS_CXX11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    message(STATUS "Setting C++11 standard via CXX flags")
+  elseif(COMPILER_SUPPORTS_CXX0X)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    message(STATUS "Setting C++0x standard via CXX FLAGS")
+  else()
+        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+  endif()
+else ()
+  set(CMAKE_CXX_STANDARD 11)
+endif()
+
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 if(UNIX AND NOT APPLE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC")
@@ -54,7 +71,7 @@ find_package(Qt5Xml CONFIG REQUIRED)
 include_directories(${Qt5Xml_INCLUDE_DIRS})
 
 find_library(LIBNOVA_LIBRARY
-     NAMES "libnova.a" "libnova.so"
+     NAMES "libnova.dll.a" "libnova.a" "libnova.so"
      PATHS
      $ENV{EXTERNLIBS}/lib
      ~/Library/Frameworks
@@ -87,7 +104,7 @@ include_directories(${LIBNOVA_INCLUDE_DIR})
 #find_package(OpenJPEG REQUIRED)
 find_library(OPENJPEG_LIBRARIES
 #     NAMES "libopenjp2.a" "libopenjp2.so" "libopenjpeg.so.2" "libopenjp2.dll.a"
-     NAMES "libopenjp2.so.7" "libopenjp2.so" "libopenjp2.a" "libopenjpeg.so.2" "libopenjp2.dll.a"
+     NAMES "libopenjp2.so.7" "libopenjp2.so" "libopenjp2.dll.a" "libopenjp2.a" "libopenjpeg.so.2"
      PATHS
      $ENV{EXTERNLIBS}/lib
      ~/Library/Frameworks
@@ -110,6 +127,7 @@ find_path(OPENJPEG_INCLUDE_DIR
      /usr/local/include
      /usr/local/include/openjpeg-2.3
      /usr/include/openjpeg-2.3
+     /include/openjpeg-2.3
      /usr/local/include/openjpeg-2.1
      /usr/include/openjpeg-2.1
      /usr/local/include/openjpeg-2.2
@@ -132,7 +150,7 @@ if(NOT WIN32)
 endif()
 if(WIN32)
     find_library(PROJ4_LIBRARIES
-        NAME "libproj.a"
+        NAME "libproj.dll.a" "libproj.a"
         PATHS
         $ENV{EXTERNLIBS}/lib
          /opt/lib
@@ -149,7 +167,8 @@ endif()
 if(WIN32)
     message(STATUS "Search WIN32 BZIP2")
     find_library(BZIP2_LIBRARIES
-        NAME "libbz2.a"
+        NAME "libbz2.dll.a" "libbz2.a"
+#        NAME "libbz2.a" "libbz2.dll.a"
         PATHS
         $ENV{EXTERNLIBS}/lib
          /opt/lib
@@ -169,7 +188,7 @@ include_directories(${BZIP2_INCLUDE_DIR})
 
 if(WIN32)
     find_library(ZLIB_LIBRARIES
-        NAME "libz.a"
+        NAME "libz.dll.a" "libz.a"
         PATHS
         $ENV{EXTERNLIBS}/lib
         /opt/lib
@@ -190,7 +209,7 @@ include_directories(${ZLIB_INCLUDE_DIR})
 
 if(WIN32)
     find_library(PNG_LIBRARIES
-        NAME "libpng.a"
+        NAME "libpng.dll.a" "libpng.a"
         PATHS
         $ENV{EXTERNLIBS}/lib
         /opt/lib

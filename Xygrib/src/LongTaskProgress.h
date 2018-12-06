@@ -20,19 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LONGTASKPROGRESS_H
 
 #include <QProgressDialog>
-
-//-----------------------------------------
-enum LongTaskMessageType
-	{
-		LTASK_OPEN_FILE,
-		LTASK_ANALYSE_DATA,
-		LTASK_PREPARE_MAPS,
-		LTASK_UNCOMPRESS_FILE
-	};
+#include "LongTaskMessage.h"
 
 //-----------------------------------------
 class LongTaskProgress : public QObject
-{ Q_OBJECT
+{
+Q_OBJECT
 
 	public:
 			
@@ -40,19 +33,21 @@ class LongTaskProgress : public QObject
 		~LongTaskProgress ();
 
 		void setWindowTitle (const QString& title);
-		void setValue (int value);
 		void setVisible (bool vis);
-		void setMessage (LongTaskMessageType msgtype);
-		
 		QProgressDialog *progress;
-		
-		volatile bool continueDownload;
-		
-	public slots :
-		void downloadCanceled ();
+
+		bool continueDownload;
+
+public slots:
+    	void setValue(int value);
+    	void setMessage(LongTaskMessage::LongTaskMessageType msgtype);
+
+    	void downloadCanceled();
+
+signals:
+    	void newMessage(LongTaskMessage::LongTaskMessageType msgtype);
+    	void valueChanged(int newValue);
+    	void canceled();
 };
-
-
-
 
 #endif

@@ -1,5 +1,5 @@
 /**********************************************************************
-XyGrib: meteorological GRIB file viewer
+zyGrib: meteorological GRIB file viewer
 Copyright (C) 2008-2012 - Jacques Zaninetti - http://www.zygrib.org
 
 This program is free software: you can redistribute it and/or modify
@@ -16,29 +16,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-/*************************************
-Dessin des données GRIB (avec QT)
-*************************************/
+#ifndef REGULARGRIDDEDPLOT_H
+#define REGULARGRIDDEDPLOT_H
 
-#ifndef GRIB2PLOT_H
-#define GRIB2PLOT_H
+#include <QString>
 
-#include "GribPlot.h"
-#include "Grib2Reader.h"
- 
+#include "GriddedPlotter.h"
+
 //===============================================================
-class Grib2Plot : public GribPlot
+class RegularGridPlot : public GriddedPlotter
 {
     public:
-        Grib2Plot ();
-        Grib2Plot (const Grib2Plot &) = delete;
-        Grib2Plot& operator=( const Grib2Plot& ) = delete; // non copyable
+        RegularGridPlot () {}
+        virtual ~RegularGridPlot() {}
 
-        virtual ~Grib2Plot ();
-        
-		virtual void  loadFile (const QString &fileName,
-						LongTaskProgress *taskProgress=NULL, int nbrecs=0);
-
+	protected:
+		QString fileName;
 };
+
 
 #endif

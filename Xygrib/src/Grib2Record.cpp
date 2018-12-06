@@ -19,15 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Grib2Record.h"
 
 //----------------------------------------
-Grib2Record::Grib2Record ()
-{	
-}
-
-//----------------------------------------
-Grib2Record::~Grib2Record ()
-{	
-}
-//----------------------------------------
 // david added discipline
 Grib2Record::Grib2Record (gribfield  *gfld, int id, int idCenter, time_t refDate, int dscpl)
 {
@@ -90,6 +81,7 @@ Grib2Record::Grib2Record (gribfield  *gfld, int id, int idCenter, time_t refDate
 		xmin -= 360.0;
         xmax -= 360.0;
     }
+    grid = std::make_shared<PlateCarree>(Ni, Nj, xmin, ymin, Di, Dj);
 	resolFlags = gfld->igdtmpl[13];
 	hasDiDj = (resolFlags&0x10)!=0 && (resolFlags&0x20)!=0;
 	isUeastVnorth =  (resolFlags&0x08) ==0;
@@ -124,52 +116,41 @@ Grib2Record::Grib2Record (gribfield  *gfld, int id, int idCenter, time_t refDate
 	size_t size = Ni*Nj;
 	this->data = new double[size];
 	assert (this->data);
-
     // Read data in the order given by isAdjacentI
-    int i, j;
-    int ind, indgfld=0;
-    if (isAdjacentI) {
-        for (j=0; j<Nj; j++) {
-            for (i=0; i<Ni; i++, indgfld++) {
-                if (!hasDiDj && !isScanJpositive) {
-                    ind = (Nj-1 -j)*Ni+i;
-                }
-                else {
-                    ind = j*Ni+i;
-                }
-                if (!hasBMS || gfld->bmap[ind]) {
-                    data[ind] = gfld->fld[indgfld];
-                }
-                else {
-                    data[ind] = GRIB_NOTDEF;
-                }
-            }
-        }
-    }
-    else {
-        for (i=0; i<Ni; i++) {
-            for (j=0; j<Nj; j++, indgfld++) {
-                if (!hasDiDj && !isScanJpositive) {
-                    ind = (Nj-1 -j)*Ni+i;
-                }
-                else {
-                    ind = j*Ni+i;
-                }
-                if (!hasBMS || gfld->bmap[ind]) {
-                    data[ind] = gfld->fld[indgfld];
-                }
-                else {
-                    data[ind] = GRIB_NOTDEF;
-                }
+	for (int j=0; j<Nj; j++) {
+		for (int i=0; i<Ni; i++) {
+			int indgfld;
+			switch(scanFlags){
+				case 0:   /* 0000 0000 */ indgfld = (Nj -j -1)*Ni +i;          break;
+				case 128: /* 1000 0000 */ indgfld = (Nj -j -1)*Ni +(Ni -i -1); break;
+				case 64:  /* 0100 0000 */ indgfld =          j*Ni +i;          break;
+				case 192: /* 1100 0000 */ indgfld =          j*Ni +(Ni -i -1); break;
+				case 32:  /* 0010 0000 */ indgfld =          i*Nj +(Nj -j -1); break;
+				case 160: /* 1010 0000 */ indgfld = (Ni -i -1)*Nj +(Ni -i -1); break;
+				case 96:  /* 0110 0000 */ indgfld =          i*Nj +j;          break;
+				case 224: /* 1110 0000 */ indgfld = (Ni -i -1)*Nj +j;          break;
+				case 80:  /* 0101 0000 */ indgfld = ( j % 2 == 0 ?
+                                                j*Ni +i :
+                                                j*Ni +(Ni -i -1) );            break;
+				default:
+					ok = false;
+					return;
+			}
+			int ind = j*Ni +i;
+			if (!hasBMS || gfld->bmap[indgfld]) {
+				data[ind] = gfld->fld[indgfld];
+			}
+            else {
+                data[ind] = GRIB_NOTDEF;
             }
         }
     }
 	if (ok && hasBMS) { // replace the BMS bits table with a faster bool table
         boolBMStab = new bool [Ni*Nj];
 		assert (boolBMStab);
-		for (int i=0; i<Ni; i++) {
-			for (int j=0; j<Nj; j++) {
-				ind = j*Ni+i;
+		for (int j=0; j<Nj; j++) {
+			for (int i=0; i<Ni; i++) {
+				int ind = j*Ni+i;
 				boolBMStab [ind] = gfld->bmap[ind];
 			}
 		}
@@ -623,6 +604,7 @@ void Grib2Record::print (const char *title)
 	if (ok) {
 		fprintf(stderr,"====== Grib2Record %d : %s\n", id, title);
 		fprintf(stderr,"idCenter=%d idModel=%d idGrid=%d\n", idCenter,idModel,idGrid);
+		fprintf(stderr,"scanFlags= 0x%x\n", scanFlags);
 		fprintf(stderr,"data=%s alt=%s\n", qPrintable(DataCodeStr::toString_name(dataType)), qPrintable(AltitudeStr::toStringShort(Altitude(levelType,levelValue))) );
 		fprintf(stderr,"dataType=%d levelType=%d levelValue=%d\n", dataType, levelType,levelValue);
 		fprintf(stderr,"hour=%02g  cur=%s  ref=%s\n", (curDate-refDate)/3600.0,strCurDate,strRefDate);
@@ -631,6 +613,7 @@ void Grib2Record::print (const char *title)
 		fprintf(stderr,"hasDiDj=%d Ni=%d Nj=%d    entireWorldInLongitude=%d\n", hasDiDj, Ni,Nj, (int)entireWorldInLongitude);
 // 		fprintf(stderr,"savDi,savDj=(%f %f)\n", hasDiDj, savDi,savDj);
 		fprintf(stderr,"final     Di,Dj=(%f %f)\n", Di,Dj);
+		fprintf(stderr,"scanFlags=0x%x\n", scanFlags);
 		fprintf(stderr,"hasBMS=%d isScanIpositive=%d isScanJpositive=%d isAdjacentI=%d\n",
 							hasBMS, isScanIpositive,isScanJpositive,isAdjacentI );
 	}
