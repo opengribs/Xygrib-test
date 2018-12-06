@@ -1,0 +1,15 @@
+build*
+src/GUI/ui_*
+*.o
+*.a
+*.so
+data/config
+*.user
+*.pro
+*.pkg
+*.zip
+*.app
+.qmake.stash
+.DS_Store
+*~
+.*~
